@@ -2,7 +2,7 @@ import Service from '@ember/service';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export default class SupabaseService extends Service {
-  #client: SupabaseClient;
+  client: SupabaseClient;
 
   constructor() {
     super();
@@ -12,21 +12,31 @@ export default class SupabaseService extends Service {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYyMjE3MjExOSwiZXhwIjoxOTM3NzQ4MTE5fQ.CZ8Dzlo0tyl8S7Mz5EyEHj8sRowkMfsDVy02Uc596K0'
     );
 
-    this.#client = supabase;
+    this.client = supabase;
   }
 
   async restoreSession() {
-    const { data, error } = await this.#client.auth.getSessionFromUrl({
+    const session = await this.client.auth.session();
+
+    if (session) {
+      return { data: session };
+    }
+
+    const { data, error } = await this.client.auth.getSessionFromUrl({
       storeSession: true,
     });
     return { data, error };
   }
 
   async login(email: string) {
-    const { error, data } = await this.#client.auth.api.sendMagicLinkEmail(
+    const { error, data } = await this.client.auth.api.sendMagicLinkEmail(
       email
     );
     return { data, error };
+  }
+
+  async logout() {
+    await this.client.auth.signOut();
   }
 }
 
