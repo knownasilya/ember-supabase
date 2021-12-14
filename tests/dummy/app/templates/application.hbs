@@ -2,4 +2,12 @@
 
 <h2 id="title">Welcome to Ember</h2>
 
+<ul>
+  {{#each this.model as |post|}}
+    <li>
+      {{post.title}}
+    </li>
+  {{/each}}
+</ul>
+
 {{outlet}}
