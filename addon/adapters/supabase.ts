@@ -4,7 +4,6 @@ import RSVP from 'rsvp';
 import { pluralize } from 'ember-inflector';
 
 import type SupabaseService from 'ember-supabase/services/supabase';
-// @ts-ignore
 import type Store from '@ember-data/store';
 import type ModelRegistry from 'ember-data/types/registries/model';
 import type DS from 'ember-data';
