@@ -1741,6 +1741,13 @@
   dependencies:
     "@types/ember-data" "*"
 
+"@types/ember-data__model@^3.16.2":
+  version "3.16.2"
+  resolved "https://registry.yarnpkg.com/@types/ember-data__model/-/ember-data__model-3.16.2.tgz#12b692835afa6cd7eeab99357e4b6c5a5ce8c2d4"
+  integrity sha512-M5q4I7qsTRPl4hIA0htVj+1jyVJRsScucPUlNuxi36MxXsRj4v1y1nxywt8PRxlsz5umL+yJSrBpL3z3jBPwbA==
+  dependencies:
+    "@types/ember-data" "*"
+
 "@types/ember-data__serializer@^3.16.1":
   version "3.16.1"
   resolved "https://registry.yarnpkg.com/@types/ember-data__serializer/-/ember-data__serializer-3.16.1.tgz#949b495f85294c0f825f85844d400c9642a99bff"
