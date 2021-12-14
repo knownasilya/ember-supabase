@@ -27,7 +27,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
           if (error) {
             reject(error);
           } else {
-            resolve(data);
+            resolve(data![0]);
           }
         });
     });
@@ -48,7 +48,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
           if (error) {
             reject(error);
           } else {
-            resolve(data);
+            resolve(data![0]);
           }
         });
     });
