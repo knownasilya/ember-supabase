@@ -29,7 +29,10 @@ Authentication is supported by [ember-simple-auth](https://github.com/simplabs/e
 
 ```javascript
 this.session.authenticate('authenticator:supabase', (auth) => {
-  return _TODO_(auth, 'me@example.com', 'password');
+  return auth.signIn({
+    email: 'example@email.com',
+    password: 'example-password',
+  });
 });
 ```
 
