@@ -21,6 +21,11 @@ module.exports = function (environment) {
       // Here you can pass flags/options to your application instance
       // when it is created
     },
+
+    supabase: {
+      url: 'https://ntrnjxrtkpvqhszgagun.supabase.co',
+      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYyMjE3MjExOSwiZXhwIjoxOTM3NzQ4MTE5fQ.CZ8Dzlo0tyl8S7Mz5EyEHj8sRowkMfsDVy02Uc596K0',
+    },
   };
 
   if (environment === 'development') {
