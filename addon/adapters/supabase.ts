@@ -7,6 +7,7 @@ import type SupabaseService from 'ember-supabase/services/supabase';
 import type Store from '@ember-data/store';
 import type ModelRegistry from 'ember-data/types/registries/model';
 import type DS from 'ember-data';
+import type { SupabaseQueryBuilder } from '@supabase/supabase-js/dist/main/lib/SupabaseQueryBuilder';
 
 type ModelClass = any;
 
@@ -20,8 +21,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
   ): RSVP.Promise<any> {
     return new RSVP.Promise((resolve, reject) => {
       const serialized = this.serialize(snapshot, { includeId: true });
-      this.supabase.client
-        .from(pluralize(type.modelName))
+      this.buildRef(type.modelName)
         .insert([serialized])
         .then(({ data, error }) => {
           if (error) {
@@ -40,8 +40,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
   ): RSVP.Promise<any> {
     return new RSVP.Promise((resolve, reject) => {
       const serialized = this.serialize(snapshot, { includeId: true });
-      this.supabase.client
-        .from(pluralize(type.modelName))
+      this.buildRef(type.modelName)
         .update([serialized])
         .match({ id: snapshot.id })
         .then(({ data, error }) => {
@@ -60,8 +59,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     snapshot: DS.Snapshot<K>
   ): RSVP.Promise<any> {
     return new RSVP.Promise((resolve, reject) => {
-      this.supabase.client
-        .from(pluralize(type.modelName))
+      this.buildRef(type.modelName)
         .delete()
         .match({ id: snapshot.id })
         .then(({ data, error }) => {
@@ -81,8 +79,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     _snapshot: DS.Snapshot<K>
   ): RSVP.Promise<any> {
     return new RSVP.Promise((resolve, reject) => {
-      this.supabase.client
-        .from(pluralize(type.modelName))
+      this.buildRef(type.modelName)
         .select()
         .match({ id })
         .then(({ data, error }) => {
@@ -102,8 +99,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     _snapshotRecordArray: any
   ): RSVP.Promise<any> {
     return new RSVP.Promise((resolve, reject) => {
-      this.supabase.client
-        .from(pluralize(type.modelName))
+      this.buildRef(type.modelName)
         .select()
         .then(({ data, error }) => {
           if (error) {
@@ -113,6 +109,10 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
           }
         });
     });
+  }
+
+  protected buildRef(modelName: string): SupabaseQueryBuilder<any> {
+    return this.supabase.client.from(pluralize(modelName));
   }
 }
 
