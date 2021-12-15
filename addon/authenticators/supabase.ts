@@ -10,7 +10,7 @@ import type { SupabaseAuthClient } from '@supabase/supabase-js/dist/main/lib/Sup
 type User = any;
 type Provider = any;
 
-interface SBResponse {
+interface SignInResponse {
   session: Session | null;
   user: User | null;
   provider?: Provider;
@@ -26,15 +26,15 @@ export default class SupabaseAuthenticator extends BaseAuthenticator {
   }
 
   public async authenticate(
-    callback: (auth: SupabaseAuthClient) => Promise<any>
-  ): Promise<Record<string, unknown>> {
+    callback: (auth: SupabaseAuthClient) => Promise<SignInResponse>
+  ): Promise<Session> {
     const { auth } = this.supabase.client;
-    const response = (await callback(auth)) as SBResponse;
+    const response = await callback(auth);
     return new Promise((resolve, reject) => {
-      if (response.error) {
+      if (response.error || !response.session) {
         reject(response.error);
       } else {
-        resolve(response.user);
+        resolve(response.session);
       }
     });
   }
@@ -45,7 +45,7 @@ export default class SupabaseAuthenticator extends BaseAuthenticator {
 
   public async restore(): Promise<Session> {
     const auth = await this.supabase.restoreSession();
-    if (!auth.error || !auth.data) {
+    if (auth.error || !auth.data) {
       throw auth.error;
     }
     return auth.data;
