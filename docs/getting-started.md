@@ -23,7 +23,23 @@ let ENV = {
 Authentication
 ------------------------------------------------------------------------------
 
-TBD
+### Signing In
+
+Authentication is supported by [ember-simple-auth](https://github.com/simplabs/ember-simple-auth) via a Superbase authenticator.
+
+```javascript
+this.session.authenticate('authenticator:supabase', (auth) => {
+  return _TODO_(auth, 'me@example.com', 'password');
+});
+```
+
+### Signing Out
+
+Call `invalidate()` on the `session` service provided by `ember-simple-auth`.
+
+```javascript
+this.session.invalidate();
+```
 
 
 Database
