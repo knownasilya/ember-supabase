@@ -111,6 +111,26 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     });
   }
 
+  findHasMany(
+    _store: Store,
+    snapshot: any,
+    _url: string,
+    relationship: any,
+  ): RSVP.Promise<unknown> {
+    return new RSVP.Promise((resolve, reject) => {
+      this.buildRef(relationship.type)
+        .select()
+        .eq(relationship.__inverseKey, snapshot.id)
+        .then(({ data, error }) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(data);
+          }
+        });
+    });
+  }
+
   protected buildRef(modelName: string): SupabaseQueryBuilder<any> {
     return this.supabase.client.from(pluralize(modelName));
   }
