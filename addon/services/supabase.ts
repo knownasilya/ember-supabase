@@ -18,7 +18,7 @@ export default class SupabaseService extends Service {
   }
 
   async restoreSession() {
-    const session = await this.client.auth.session();
+    const session = this.client.auth.session();
 
     if (session) {
       return { data: session };
