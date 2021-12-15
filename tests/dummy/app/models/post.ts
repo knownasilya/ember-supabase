@@ -3,7 +3,12 @@ import Model, { attr, hasMany, AsyncHasMany } from '@ember-data/model';
 import type CommentModel from './comment';
 
 export default class PostModel extends Model {
-  @attr('date') declare createdAt: Date;
+  @attr('date', {
+    defaultValue() {
+      return new Date();
+    },
+  })
+  declare createdAt: Date;
   @attr('string') declare title: string;
   @attr('string') declare body: string;
 

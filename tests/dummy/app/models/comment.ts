@@ -5,7 +5,12 @@ import type PostModel from './post';
 export default class CommentModel extends Model {
   @belongsTo('post') declare post: AsyncBelongsTo<PostModel>;
 
-  @attr('date') declare createdAt: Date;
+  @attr('date', {
+    defaultValue() {
+      return new Date();
+    },
+  })
+  declare createdAt: Date;
   @attr('string') declare body: string;
 }
 

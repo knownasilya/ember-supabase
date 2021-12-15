@@ -12,7 +12,15 @@
 <ul>
   {{#each this.model as |post|}}
     <li>
-      {{post.title}}
+      <b>{{post.title}}</b>
+      <i>{{post.createdAt}}</i>
+      <ul>
+        {{#each post.comments as |comment|}}
+          <li>
+            {{comment.body}}
+          </li>
+        {{/each}}
+      </ul>
     </li>
   {{/each}}
 </ul>
