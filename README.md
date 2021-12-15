@@ -23,7 +23,7 @@ ember install ember-supabase
 Usage
 ------------------------------------------------------------------------------
 
-[Longer description of how to use the addon in apps.]
+[Read the docs here.](docs/getting-started.md)
 
 
 Contributing
