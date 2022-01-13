@@ -24,10 +24,10 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
       this.buildRef(type.modelName)
         .insert([serialized])
         .then(({ data, error }) => {
-          if (error) {
+          if (error || !data) {
             reject(error);
           } else {
-            resolve(data![0]);
+            resolve(data[0]);
           }
         });
     });
@@ -44,10 +44,10 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
         .update([serialized])
         .match({ id: snapshot.id })
         .then(({ data, error }) => {
-          if (error) {
+          if (error || !data) {
             reject(error);
           } else {
-            resolve(data![0]);
+            resolve(data[0]);
           }
         });
     });
@@ -83,10 +83,10 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
         .select()
         .match({ id })
         .then(({ data, error }) => {
-          if (error) {
+          if (error || !data) {
             reject(error);
           } else {
-            resolve(data![0]);
+            resolve(data[0]);
           }
         });
     });
