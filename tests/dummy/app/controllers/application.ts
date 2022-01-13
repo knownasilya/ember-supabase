@@ -2,10 +2,24 @@ import Controller from '@ember/controller';
 import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 
+import type SupabaseService from 'ember-supabase/services/supabase';
 import type { SupabaseAuthClient } from '@supabase/supabase-js/dist/main/lib/SupabaseAuthClient';
 
 export default class ApplicationController extends Controller {
   @service declare session: any;
+  @service declare supabase: SupabaseService;
+
+  @action register(): void {
+    this.session.authenticate(
+      'authenticator:supabase',
+      (auth: SupabaseAuthClient) => {
+        return auth.signUp({
+          email: 'example@email.com',
+          password: 'example-password',
+        });
+      }
+    );
+  }
 
   @action login(): void {
     this.session.authenticate(
