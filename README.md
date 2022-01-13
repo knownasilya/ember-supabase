@@ -1,7 +1,7 @@
 ember-supabase
 ==============================================================================
 
-[Short description of the addon.]
+Ember Data and Ember Simple Auth integrations for [Supabase][https://supabase.com/].
 
 
 Compatibility
