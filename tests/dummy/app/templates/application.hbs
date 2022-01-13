@@ -1,5 +1,28 @@
-{{page-title "Dummy"}}
+{{page-title "ember-supabase"}}
 
-<h2 id="title">Welcome to Ember</h2>
+<h2 id="title">ember-supabase</h2>
+
+<p>Authenticated: {{this.session.isAuthenticated}}</p>
+
+<div>
+  <button type="button" {{on "click" this.login}}>Login</button>
+  <button type="button" {{on "click" this.logout}}>Logout</button>
+</div>
+
+<ul>
+  {{#each this.model as |post|}}
+    <li>
+      <b>{{post.title}}</b>
+      <i>{{post.createdAt}}</i>
+      <ul>
+        {{#each post.comments as |comment|}}
+          <li>
+            {{comment.body}}
+          </li>
+        {{/each}}
+      </ul>
+    </li>
+  {{/each}}
+</ul>
 
 {{outlet}}

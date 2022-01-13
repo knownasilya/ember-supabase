@@ -1,22 +1,24 @@
 import Service from '@ember/service';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getOwner } from '@ember/application';
 
 export default class SupabaseService extends Service {
   client: SupabaseClient;
 
   constructor() {
-    super();
+    super(...arguments);
+
+    const config = getOwner(this).resolveRegistration('config:environment');
+    const { url, key } = config.supabase;
+
     // Create a single supabase client for interacting with your database
-    const supabase = createClient(
-      'https://ntrnjxrtkpvqhszgagun.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYyMjE3MjExOSwiZXhwIjoxOTM3NzQ4MTE5fQ.CZ8Dzlo0tyl8S7Mz5EyEHj8sRowkMfsDVy02Uc596K0'
-    );
+    const supabase = createClient(url, key);
 
     this.client = supabase;
   }
 
   async restoreSession() {
-    const session = await this.client.auth.session();
+    const session = this.client.auth.session();
 
     if (session) {
       return { data: session };
