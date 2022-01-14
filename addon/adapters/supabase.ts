@@ -111,6 +111,27 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     });
   }
 
+  public findBelongsTo<K extends keyof ModelRegistry>(
+    _store: Store,
+    _snapshot: DS.Snapshot<K>,
+    url: string,
+  ): RSVP.Promise<unknown> {
+    const [modelName, id] = url.split('/');
+
+    return new RSVP.Promise((resolve, reject) => {
+      this.buildRef(modelName)
+        .select()
+        .match({ id })
+        .then(({ data, error }) => {
+          if (error || !data) {
+            reject(error);
+          } else {
+            resolve(data[0]);
+          }
+        });
+    });
+  }
+
   findHasMany(
     _store: Store,
     snapshot: any,
