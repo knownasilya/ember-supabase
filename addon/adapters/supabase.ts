@@ -116,10 +116,9 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     _snapshot: DS.Snapshot<K>,
     url: string,
   ): RSVP.Promise<unknown> {
-    const [modelName, id] = url.split('/');
-
     return new RSVP.Promise((resolve, reject) => {
-      this.buildRef(modelName)
+      const [type, id] = url.split('/');
+      this.buildRef(type)
         .select()
         .match({ id })
         .then(({ data, error }) => {

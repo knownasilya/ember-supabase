@@ -15,6 +15,7 @@
     <li>
       <b>{{post.title}}</b>
       <i>{{post.createdAt}}</i>
+      <small>{{post.user.email}}</small>
       <ul>
         {{#each post.comments as |comment|}}
           <li>
