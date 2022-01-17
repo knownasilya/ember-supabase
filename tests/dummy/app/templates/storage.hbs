@@ -1,0 +1,12 @@
+<label>
+  Upload
+  <input type="file" {{on "change" this.upload}} />
+</label>
+
+{{#if this.url}}
+  <p>URL: <a href={{this.url}}>{{this.url}}</a></p>
+{{/if}}
+
+{{#if this.error}}
+  <p>Error: {{this.error}}</p>
+{{/if}}
