@@ -7,6 +7,18 @@ import type { SupabaseAuthClient } from '@supabase/supabase-js/dist/main/lib/Sup
 export default class ApplicationController extends Controller {
   @service declare session: any;
 
+  @action register(): void {
+    this.session.authenticate(
+      'authenticator:supabase',
+      (auth: SupabaseAuthClient) => {
+        return auth.signUp({
+          email: 'example@email.com',
+          password: 'example-password',
+        });
+      }
+    );
+  }
+
   @action login(): void {
     this.session.authenticate(
       'authenticator:supabase',

@@ -1,8 +1,11 @@
-import Model, { attr, hasMany, AsyncHasMany } from '@ember-data/model';
+import Model, { attr, belongsTo, hasMany, AsyncBelongsTo, AsyncHasMany } from '@ember-data/model';
 
+import type UserModel from './user';
 import type CommentModel from './comment';
 
 export default class PostModel extends Model {
+  @belongsTo('user') declare user: AsyncBelongsTo<UserModel>;
+
   @attr('date', {
     defaultValue() {
       return new Date();

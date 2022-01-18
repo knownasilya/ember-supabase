@@ -5,6 +5,7 @@
 <p>Authenticated: {{this.session.isAuthenticated}}</p>
 
 <div>
+  <button type="button" {{on "click" this.register}}>Register</button>
   <button type="button" {{on "click" this.login}}>Login</button>
   <button type="button" {{on "click" this.logout}}>Logout</button>
 </div>
