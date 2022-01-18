@@ -7,6 +7,7 @@ export default class Router extends EmberRouter {
 }
 
 Router.map(function () {
-  this.route('storage');
+  this.route('authentication');
   this.route('database');
+  this.route('storage');
 });

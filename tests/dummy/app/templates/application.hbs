@@ -2,16 +2,9 @@
 
 <h2 id="title">ember-supabase</h2>
 
-<p>Authenticated: {{this.session.isAuthenticated}}</p>
-
-<div>
-  <button type="button" {{on "click" this.register}}>Register</button>
-  <button type="button" {{on "click" this.login}}>Login</button>
-  <button type="button" {{on "click" this.logout}}>Logout</button>
-</div>
-
 <p>
   <LinkTo @route="index">Home</LinkTo>
+  <LinkTo @route="authentication">Authentication</LinkTo>
   <LinkTo @route="database">Database</LinkTo>
   <LinkTo @route="storage">Storage</LinkTo>
 </p>

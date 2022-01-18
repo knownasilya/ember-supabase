@@ -21,6 +21,7 @@ interface SignInResponse {
 export default class SupabaseAuthenticator extends BaseAuthenticator {
   @service declare supabase: SupabaseService;
 
+  // @ts-ignore
   private get fastboot(): FastBootService | null {
     return getOwner(this).lookup('service:fastboot');
   }
