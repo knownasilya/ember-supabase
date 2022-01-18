@@ -43,14 +43,13 @@ export default class SupabaseSerializer extends JSONSerializer {
     const newResourceHash = { ...resourceHash };
     const links: { [key: string]: string } = {};
 
-    modelClass.eachRelationship((name: any, descriptor: any) => {
+    modelClass.eachRelationship((name, descriptor) => {
       if (descriptor.kind === 'belongsTo') {
-        const path = ''; // TODO:
+        const id = resourceHash[name];
+        const path = `${name}/${id}`;
         links[name] = path;
       } else {
-        // TODO:
-        const path = `https://fjtcdofktkkxvpsmbcax.supabase.co/rest/v1/${pluralize(descriptor.type)}?select=*`;
-        links[name] = path;
+        links[name] = pluralize(descriptor.type);
       }
     });
 

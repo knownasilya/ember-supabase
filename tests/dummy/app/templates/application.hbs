@@ -5,6 +5,7 @@
 <p>Authenticated: {{this.session.isAuthenticated}}</p>
 
 <div>
+  <button type="button" {{on "click" this.register}}>Register</button>
   <button type="button" {{on "click" this.login}}>Login</button>
   <button type="button" {{on "click" this.logout}}>Logout</button>
 </div>
@@ -14,6 +15,7 @@
     <li>
       <b>{{post.title}}</b>
       <i>{{post.createdAt}}</i>
+      <small>{{post.user.email}}</small>
       <ul>
         {{#each post.comments as |comment|}}
           <li>
