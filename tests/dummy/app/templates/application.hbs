@@ -10,21 +10,12 @@
   <button type="button" {{on "click" this.logout}}>Logout</button>
 </div>
 
-<ul>
-  {{#each this.model as |post|}}
-    <li>
-      <b>{{post.title}}</b>
-      <i>{{post.createdAt}}</i>
-      <small>{{post.user.email}}</small>
-      <ul>
-        {{#each post.comments as |comment|}}
-          <li>
-            {{comment.body}}
-          </li>
-        {{/each}}
-      </ul>
-    </li>
-  {{/each}}
-</ul>
+<p>
+  <LinkTo @route="index">Home</LinkTo>
+  <LinkTo @route="database">Database</LinkTo>
+  <LinkTo @route="storage">Storage</LinkTo>
+</p>
+
+<hr />
 
 {{outlet}}
