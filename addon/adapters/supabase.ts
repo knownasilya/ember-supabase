@@ -8,8 +8,13 @@ import type Store from '@ember-data/store';
 import type ModelRegistry from 'ember-data/types/registries/model';
 import type DS from 'ember-data';
 import type { SupabaseQueryBuilder } from '@supabase/supabase-js/dist/main/lib/SupabaseQueryBuilder';
+import type PostgrestFilterBuilder from '@supabase/postgrest-js/dist/main/lib/PostgrestFilterBuilder';
 
 type ModelClass = any;
+
+interface Query {
+  filter?(db: PostgrestFilterBuilder<any>): PostgrestFilterBuilder<any>;
+}
 
 export default class SupabaseAdapter extends JSONAPIAdapter {
   @service declare supabase: SupabaseService;
@@ -148,6 +153,24 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
             resolve(data);
           }
         });
+    });
+  }
+
+  query<K extends keyof ModelRegistry>(
+    _store: Store,
+    type: ModelRegistry[K],
+    query: Query
+  ): RSVP.Promise<any> {
+    return new RSVP.Promise((resolve, reject) => {
+      let ref = this.buildRef((type as ModelClass).modelName).select();
+      ref = query.filter?.(ref) || ref;
+      ref.then(({ data, error }) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      });
     });
   }
 
