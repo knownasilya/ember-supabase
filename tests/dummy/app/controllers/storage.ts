@@ -5,6 +5,8 @@ import { action } from '@ember/object';
 
 import SupabaseService from 'ember-supabase/services/supabase';
 
+const SUPABASE_BUCKET_ID = 'uploads';
+
 export default class StorageController extends Controller {
   @service declare supabase: SupabaseService;
 
@@ -14,18 +16,22 @@ export default class StorageController extends Controller {
   @action async upload(
     event: Event & { target: HTMLInputElement & { files: FileList } }
   ): Promise<any> {
-    const { files } = event.target;
-    const [file] = files;
+    this.url = undefined;
+    this.error = undefined;
 
-    const { data, error } = await this.supabase.client.storage
-      .from('uploads')
+    const {
+      files: [file],
+    } = event.target;
+
+    const { error } = await this.supabase.client.storage
+      .from(SUPABASE_BUCKET_ID)
       .upload(file.name, file);
 
     if (error) {
       this.error = error.message;
     } else {
       const { signedURL, error } = await this.supabase.client.storage
-        .from('uploads')
+        .from(SUPABASE_BUCKET_ID)
         .createSignedUrl(file.name, 60);
 
       if (error) {

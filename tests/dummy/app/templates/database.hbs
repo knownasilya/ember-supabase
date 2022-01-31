@@ -1,3 +1,17 @@
+{{#if this.error}}
+  <p>Error: {{this.error}}</p>
+{{/if}}
+
+<label>
+  Title
+  <Input @value={{this.title}} @type="text" />
+</label>
+<label>
+  Body
+  <Textarea @value={{this.body}} />
+</label>
+<button type="button" {{on "click" this.create}}>Create</button>
+
 <ul>
   {{#each this.model as |post|}}
     <li>

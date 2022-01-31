@@ -111,10 +111,10 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     });
   }
 
-  public findBelongsTo<K extends keyof ModelRegistry>(
+  findBelongsTo<K extends keyof ModelRegistry>(
     _store: Store,
     _snapshot: DS.Snapshot<K>,
-    url: string,
+    url: string
   ): RSVP.Promise<unknown> {
     return new RSVP.Promise((resolve, reject) => {
       const [type, id] = url.split('/');
@@ -135,7 +135,7 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     _store: Store,
     snapshot: any,
     _url: string,
-    relationship: any,
+    relationship: any
   ): RSVP.Promise<unknown> {
     return new RSVP.Promise((resolve, reject) => {
       this.buildRef(relationship.type)
