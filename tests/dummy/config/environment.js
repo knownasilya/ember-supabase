@@ -23,8 +23,8 @@ module.exports = function (environment) {
     },
 
     supabase: {
-      url: 'https://ntrnjxrtkpvqhszgagun.supabase.co',
-      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYyMjE3MjExOSwiZXhwIjoxOTM3NzQ4MTE5fQ.CZ8Dzlo0tyl8S7Mz5EyEHj8sRowkMfsDVy02Uc596K0',
+      url: 'https://fmqaxndatnigcgmxmvwf.supabase.co',
+      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYxNDgxNzA2MiwiZXhwIjoxOTMwMzkzMDYyfQ.rvzS79uzGiwYR014HEHmjFkyTNWOUbmqNPLo_op2Wtk',
     },
   };
 

@@ -13,164 +13,190 @@ import type PostgrestFilterBuilder from '@supabase/postgrest-js/dist/main/lib/Po
 type ModelClass = any;
 
 interface Query {
-  filter?(db: PostgrestFilterBuilder<any>): PostgrestFilterBuilder<any>;
+  include?: string;
+  filter?: (ref: PostgrestFilterBuilder<any>) => PostgrestFilterBuilder<any>;
 }
 
 export default class SupabaseAdapter extends JSONAPIAdapter {
-  @service declare supabase: SupabaseService;
+  @service protected declare supabase: SupabaseService;
 
-  createRecord<K extends keyof ModelRegistry>(
+  public createRecord<K extends keyof ModelRegistry>(
     _store: Store,
     type: ModelClass,
     snapshot: DS.Snapshot<K>
   ): RSVP.Promise<any> {
-    return new RSVP.Promise((resolve, reject) => {
-      const serialized = this.serialize(snapshot, { includeId: true });
-      this.buildRef(type.modelName)
-        .insert([serialized])
-        .then(({ data, error }) => {
-          if (error || !data) {
-            reject(error);
-          } else {
-            resolve(data[0]);
-          }
-        });
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const serialized = this.serialize(snapshot, { includeId: true });
+        const ref = this.buildRef(type.modelName);
+        const { data, error } = await ref.insert(serialized);
+        if (error || !data) {
+          reject(error);
+        } else {
+          resolve(data[0]);
+        }
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
-  updateRecord<K extends keyof ModelRegistry>(
+  public updateRecord<K extends keyof ModelRegistry>(
     _store: Store,
     type: ModelClass,
     snapshot: DS.Snapshot<K>
   ): RSVP.Promise<any> {
-    return new RSVP.Promise((resolve, reject) => {
-      const serialized = this.serialize(snapshot, { includeId: true });
-      this.buildRef(type.modelName)
-        .update([serialized])
-        .match({ id: snapshot.id })
-        .then(({ data, error }) => {
-          if (error || !data) {
-            reject(error);
-          } else {
-            resolve(data[0]);
-          }
-        });
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const serialized = this.serialize(snapshot, { includeId: true });
+        const ref = this.buildRef(type.modelName);
+        const { data, error } = await ref
+          .update(serialized)
+          .match({ id: snapshot.id });
+        if (error || !data) {
+          reject(error);
+        } else {
+          resolve(data[0]);
+        }
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
-  deleteRecord<K extends keyof ModelRegistry>(
+  public deleteRecord<K extends keyof ModelRegistry>(
     _store: Store,
     type: ModelClass,
     snapshot: DS.Snapshot<K>
   ): RSVP.Promise<any> {
-    return new RSVP.Promise((resolve, reject) => {
-      this.buildRef(type.modelName)
-        .delete()
-        .match({ id: snapshot.id })
-        .then(({ data, error }) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(data);
-          }
-        });
-    });
-  }
-
-  findRecord<K extends keyof ModelRegistry>(
-    _store: Store,
-    type: ModelClass,
-    id: string,
-    _snapshot: DS.Snapshot<K>
-  ): RSVP.Promise<any> {
-    return new RSVP.Promise((resolve, reject) => {
-      this.buildRef(type.modelName)
-        .select()
-        .match({ id })
-        .then(({ data, error }) => {
-          if (error || !data) {
-            reject(error);
-          } else {
-            resolve(data[0]);
-          }
-        });
-    });
-  }
-
-  findAll(
-    _store: Store,
-    type: ModelClass,
-    _sinceToken: string,
-    _snapshotRecordArray: any
-  ): RSVP.Promise<any> {
-    return new RSVP.Promise((resolve, reject) => {
-      this.buildRef(type.modelName)
-        .select()
-        .then(({ data, error }) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(data);
-          }
-        });
-    });
-  }
-
-  findBelongsTo<K extends keyof ModelRegistry>(
-    _store: Store,
-    _snapshot: DS.Snapshot<K>,
-    url: string
-  ): RSVP.Promise<unknown> {
-    return new RSVP.Promise((resolve, reject) => {
-      const [type, id] = url.split('/');
-      this.buildRef(type)
-        .select()
-        .match({ id })
-        .then(({ data, error }) => {
-          if (error || !data) {
-            reject(error);
-          } else {
-            resolve(data[0]);
-          }
-        });
-    });
-  }
-
-  findHasMany(
-    _store: Store,
-    snapshot: any,
-    _url: string,
-    relationship: any
-  ): RSVP.Promise<unknown> {
-    return new RSVP.Promise((resolve, reject) => {
-      this.buildRef(relationship.type)
-        .select()
-        .eq(relationship.__inverseKey, snapshot.id)
-        .then(({ data, error }) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(data);
-          }
-        });
-    });
-  }
-
-  query<K extends keyof ModelRegistry>(
-    _store: Store,
-    type: ModelRegistry[K],
-    query: Query
-  ): RSVP.Promise<any> {
-    return new RSVP.Promise((resolve, reject) => {
-      let ref = this.buildRef((type as ModelClass).modelName).select();
-      ref = query.filter?.(ref) || ref;
-      ref.then(({ data, error }) => {
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const ref = this.buildRef(type.modelName);
+        const { data, error } = await ref.delete().match({ id: snapshot.id });
         if (error) {
           reject(error);
         } else {
           resolve(data);
         }
-      });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public findRecord<K extends keyof ModelRegistry>(
+    _store: Store,
+    type: ModelClass,
+    id: string,
+    _snapshot: DS.Snapshot<K>
+  ): RSVP.Promise<any> {
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const ref = this.buildRef(type.modelName);
+        const { data, error } = await ref.select().match({ id });
+        if (error || !data) {
+          reject(error);
+        } else {
+          resolve(data[0]);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public findAll(
+    _store: Store,
+    type: ModelClass,
+    _sinceToken: string,
+    _snapshotRecordArray: any
+  ): RSVP.Promise<any> {
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const ref = this.buildRef(type.modelName);
+        const { data, error } = await ref.select();
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public findBelongsTo<K extends keyof ModelRegistry>(
+    _store: Store,
+    _snapshot: DS.Snapshot<K>,
+    url: string
+  ): RSVP.Promise<unknown> {
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const [type, id] = url.split('/');
+        const ref = this.buildRef(type);
+        const { data, error } = await ref.select().match({ id });
+        if (error || !data) {
+          reject(error);
+        } else {
+          resolve(data[0]);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public findHasMany(
+    _store: Store,
+    snapshot: any,
+    _url: string,
+    relationship: any
+  ): RSVP.Promise<unknown> {
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const ref = this.buildRef(relationship.type);
+        const { data, error } = await ref
+          .select()
+          .eq(relationship.__inverseKey, snapshot.id);
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public query<K extends keyof ModelRegistry>(
+    _store: Store,
+    type: ModelRegistry[K],
+    query: Query
+  ): RSVP.Promise<any> {
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const ref = this.buildRef((type as ModelClass).modelName);
+        let columns;
+        if (query.include) {
+          const relationships = query.include.split(',');
+          columns = [
+            '*',
+            ...relationships.map((relationship) => `${relationship} (*)`),
+          ].join(',');
+        }
+        const selectRef = ref.select(columns);
+        const queryRef = query.filter?.(selectRef) || selectRef;
+        const { data, error } = await queryRef;
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 

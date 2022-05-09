@@ -16,6 +16,8 @@
   {{#each this.model as |post|}}
     <li>
       <b>{{post.title}}</b>
+      {{!-- template-lint-disable no-obsolete-elements --}}
+      <u>{{post.user.email}}</u>
       <i>{{post.createdAt}}</i>
       <ul>
         {{#each post.comments as |comment|}}

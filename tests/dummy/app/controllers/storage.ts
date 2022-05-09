@@ -15,7 +15,7 @@ export default class StorageController extends Controller {
 
   @action async upload(
     event: Event & { target: HTMLInputElement & { files: FileList } }
-  ): Promise<any> {
+  ): Promise<void> {
     this.url = undefined;
     this.error = undefined;
 
