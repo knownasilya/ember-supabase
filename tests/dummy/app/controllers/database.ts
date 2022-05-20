@@ -14,9 +14,11 @@ export default class DatabaseController extends Controller {
   @tracked error?: string;
 
   @action async create(): Promise<void> {
+    const user = this.store.peekRecord('user', '1');
     const { title, body } = this;
     try {
-      await this.store.createRecord('post', { title, body }).save();
+      await this.store.createRecord('post', { user, title, body }).save();
+      await this.model.update();
       (this.title = undefined), (this.body = undefined);
     } catch (error) {
       this.error = error.message;

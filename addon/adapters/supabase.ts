@@ -29,11 +29,11 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
       try {
         const serialized = this.serialize(snapshot, { includeId: true });
         const ref = this.buildRef(type.modelName);
-        const { data, error } = await ref.insert(serialized);
-        if (error || !data) {
+        const { data, error } = await ref.insert(serialized).single();
+        if (error) {
           reject(error);
         } else {
-          resolve(data[0]);
+          resolve(data);
         }
       } catch (error) {
         reject(error);
@@ -52,11 +52,12 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
         const ref = this.buildRef(type.modelName);
         const { data, error } = await ref
           .update(serialized)
-          .match({ id: snapshot.id });
-        if (error || !data) {
+          .match({ id: snapshot.id })
+          .single();
+        if (error) {
           reject(error);
         } else {
-          resolve(data[0]);
+          resolve(data);
         }
       } catch (error) {
         reject(error);
@@ -72,7 +73,10 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const ref = this.buildRef(type.modelName);
-        const { data, error } = await ref.delete().match({ id: snapshot.id });
+        const { data, error } = await ref
+          .delete()
+          .match({ id: snapshot.id })
+          .single();
         if (error) {
           reject(error);
         } else {
@@ -93,11 +97,11 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const ref = this.buildRef(type.modelName);
-        const { data, error } = await ref.select().match({ id });
-        if (error || !data) {
+        const { data, error } = await ref.select().match({ id }).single();
+        if (error) {
           reject(error);
         } else {
-          resolve(data[0]);
+          resolve(data);
         }
       } catch (error) {
         reject(error);
@@ -135,11 +139,11 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
       try {
         const [type, id] = url.split('/');
         const ref = this.buildRef(type);
-        const { data, error } = await ref.select().match({ id });
-        if (error || !data) {
+        const { data, error } = await ref.select().match({ id }).single();
+        if (error) {
           reject(error);
         } else {
-          resolve(data[0]);
+          resolve(data);
         }
       } catch (error) {
         reject(error);

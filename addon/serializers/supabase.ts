@@ -5,6 +5,7 @@ import { pluralize } from 'ember-inflector';
 import type Store from '@ember-data/store';
 
 import type Model from '@ember-data/model';
+import type DS from 'ember-data';
 
 interface UglyPayload {
   id: string;
@@ -215,7 +216,7 @@ export default class SupabaseSerializer extends JSONAPISerializer {
       if (kind === 'belongsTo') {
         const value = record[name] as UglyPayload | string | null;
         if (value && typeof value === 'object') {
-          const { id, ...attributes } = value as UglyPayload;
+          const { id, ...attributes } = value;
           included.push({
             type,
             id,
@@ -226,20 +227,47 @@ export default class SupabaseSerializer extends JSONAPISerializer {
         const arr = record[name] as UglyPayload[];
         if (arr) {
           included = included.concat(
-            arr.map((obj) => {
-              const { id, ...attributes } = obj;
-              return {
+            arr.map(
+              ({ id, ...attributes }): ResourceHash => ({
                 type,
                 id,
                 attributes,
-              } as ResourceHash;
-            })
+              })
+            )
           );
         }
       }
     });
 
     return included;
+  }
+
+  serialize(snapshot: DS.Snapshot, options: any) {
+    const json: Record<string, unknown> = {};
+
+    if (options && options.includeId) {
+      const id = snapshot.id;
+      if (id) {
+        json[this.primaryKey] = id;
+      }
+    }
+
+    snapshot.eachAttribute((key, _attribute) => {
+      json[underscore(key)] = snapshot.record[key];
+    });
+
+    snapshot.eachRelationship((_key, relationship) => {
+      if (relationship.kind === 'belongsTo') {
+        const id = snapshot.belongsTo(relationship.key, { id: true });
+        if (id) {
+          json[underscore(relationship.key)] = id;
+        } else {
+          json[relationship.key] = null;
+        }
+      }
+    });
+
+    return json;
   }
 }
 
