@@ -9,6 +9,7 @@ export default class DatabaseQueryRoute extends Route {
 
   model() {
     return this.store.query('post', {
+      realtime: true,
       include: 'user,comments',
       filter: (ref: PostgrestFilterBuilder<any>) => {
         return ref

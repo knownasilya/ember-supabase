@@ -1,15 +1,11 @@
 import Controller from '@ember/controller';
-import { inject as service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 
-import type Store from '@ember-data/store';
 import type PostModel from '../../models/post';
 
 export default class DatabaseUpdateRecordController extends Controller {
   declare model: PostModel;
-
-  @service declare store: Store;
 
   @tracked success?: true;
   @tracked error?: string;

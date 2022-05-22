@@ -5,6 +5,7 @@ import { run } from '@ember/runloop';
 import type SupabaseSerializer from 'ember-supabase/serializers/supabase';
 import type Store from '@ember-data/store';
 import type PostModel from 'dummy/tests/dummy/app/models/post';
+import type ModelRegistry from 'ember-data/types/registries/model';
 
 module('Unit | Serializer | supabase', function (hooks) {
   setupTest(hooks);
@@ -32,7 +33,7 @@ module('Unit | Serializer | supabase', function (hooks) {
 
     const store = this.owner.lookup('service:store') as Store;
     const modelClass = store.modelFor('post') as PostModel & {
-      modelName: string;
+      modelName: keyof ModelRegistry;
     };
     const payload = {
       id: 1,
@@ -88,7 +89,7 @@ module('Unit | Serializer | supabase', function (hooks) {
 
     const store = this.owner.lookup('service:store') as Store;
     const modelClass = store.modelFor('post') as PostModel & {
-      modelName: string;
+      modelName: keyof ModelRegistry;
     };
     const payload = {
       id: 1,

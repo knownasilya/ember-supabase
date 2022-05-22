@@ -2,7 +2,7 @@ Find Records
 ==============================================================================
 
 ```js
-return this.store.findRecord('user', 1,  {
+return this.store.findRecord('user', 1, {
   include: 'posts',
 });
 ```

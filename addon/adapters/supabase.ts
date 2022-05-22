@@ -11,16 +11,20 @@ import type { SupabaseQueryBuilder } from '@supabase/supabase-js/dist/module/lib
 import type PostgrestFilterBuilder from '@supabase/postgrest-js/dist/module/lib/PostgrestFilterBuilder';
 
 type ModelClass<K extends keyof ModelRegistry> = ModelRegistry[K] & {
-  modelName: string;
+  modelName: K;
 };
 
-interface Query {
+interface Query<K extends keyof ModelRegistry> {
+  realtime?: boolean;
   include?: string;
-  filter?: (ref: PostgrestFilterBuilder<any>) => PostgrestFilterBuilder<any>;
+  filter?: (
+    ref: PostgrestFilterBuilder<ModelRegistry[K]>
+  ) => PostgrestFilterBuilder<ModelRegistry[K]>;
 }
 
 export default class SupabaseAdapter extends RESTAdapter {
   @service protected declare supabase: SupabaseService;
+  @service protected declare store: Store;
 
   public createRecord<K extends keyof ModelRegistry>(
     _store: Store,
@@ -94,7 +98,7 @@ export default class SupabaseAdapter extends RESTAdapter {
     _store: Store,
     type: ModelClass<K>,
     id: string,
-    snapshot: DS.Snapshot<K> & Query
+    snapshot: DS.Snapshot<K> & Query<K>
   ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
@@ -140,7 +144,7 @@ export default class SupabaseAdapter extends RESTAdapter {
   public query<K extends keyof ModelRegistry>(
     _store: Store,
     type: ModelClass<K>,
-    query: Query
+    query: Query<K>
   ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
@@ -149,6 +153,11 @@ export default class SupabaseAdapter extends RESTAdapter {
         if (query.include) {
           columns = this.serializeColumns(query.include);
         }
+
+        if (query.realtime) {
+          this.addRealtimeSubscription(ref, type);
+        }
+
         const selectRef = ref.select(columns);
         const queryRef = query.filter?.(selectRef) || selectRef;
         const { data, error } = await queryRef;
@@ -170,7 +179,7 @@ export default class SupabaseAdapter extends RESTAdapter {
   ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
-        const [type, id] = url.split('/');
+        const [type, id] = url.split('/') as [K, unknown];
         const ref = this.buildRef(type);
         const { data, error } = await ref.select().match({ id }).single();
         if (error) {
@@ -188,17 +197,19 @@ export default class SupabaseAdapter extends RESTAdapter {
     store: Store,
     snapshot: DS.Snapshot<K>,
     _url: string,
-    relationship: any
+    relationship: { key: K; type: keyof ModelRegistry }
   ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const inverse = (
           snapshot.type as unknown as typeof DS.Model
-        ).inverseFor(relationship.key, store) as { name: string };
+        ).inverseFor(relationship.key, store) as {
+          name: keyof ModelRegistry[K];
+        };
         const ref = this.buildRef(relationship.type);
         const { data, error } = await ref
           .select()
-          .eq(inverse.name, snapshot.id);
+          .eq(inverse.name as any, snapshot.id);
         if (error) {
           reject(error);
         } else {
@@ -215,7 +226,9 @@ export default class SupabaseAdapter extends RESTAdapter {
    * @param modelName
    * @returns
    */
-  protected buildRef(modelName: string): SupabaseQueryBuilder<any> {
+  protected buildRef<K extends keyof ModelRegistry>(
+    modelName: K
+  ): SupabaseQueryBuilder<ModelRegistry[K]> {
     return this.supabase.client.from(pluralize(modelName));
   }
 
@@ -231,6 +244,35 @@ export default class SupabaseAdapter extends RESTAdapter {
       ...relationships.map((relationship) => `${relationship} (*)`),
     ].join(',');
   }
+
+  /**
+   * Subscribes to realtime table.
+   * @param ref
+   * @param type
+   */
+  private addRealtimeSubscription<K extends keyof ModelRegistry>(
+    ref: SupabaseQueryBuilder<ModelRegistry[K]>,
+    type: ModelClass<K>
+  ): void {
+    ref
+      .on('*', (payload) => {
+        if (payload.eventType === 'DELETE') {
+          const record = this.store.peekRecord(type.modelName, payload.old.id);
+          if (record) {
+            this.store.unloadRecord(record);
+          }
+        } else {
+          const normalizedRecord = this.store.normalize(
+            type.modelName,
+            payload.new
+          );
+          this.store.push(normalizedRecord);
+        }
+      })
+      .subscribe();
+  }
+
+  // private removeRealtimeSubscription(): void {}
 }
 
 // DO NOT DELETE: this is how TypeScript knows how to look up your adapters.

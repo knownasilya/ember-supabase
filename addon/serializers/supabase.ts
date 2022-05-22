@@ -4,9 +4,10 @@ import { pluralize } from 'ember-inflector';
 
 import type Store from '@ember-data/store';
 import type Model from '@ember-data/model';
+import type ModelRegistry from 'ember-data/types/registries/model';
 
 type ModelClass = Model & {
-  modelName: string;
+  modelName: keyof ModelRegistry;
 };
 
 export default class SupabaseSerializer extends RESTSerializer {
@@ -97,6 +98,12 @@ export default class SupabaseSerializer extends RESTSerializer {
     );
   }
 
+  /**
+   * Brings nested records up to top level for sideloading.
+   * @param primaryModelClass
+   * @param payload
+   * @param record
+   */
   private appendIncludedRecordsToPayload(
     primaryModelClass: ModelClass,
     payload: Record<string, Record<string, any> | Record<string, unknown>[]>,

@@ -21,7 +21,6 @@ module.exports = {
     browser: true,
   },
   rules: {
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
     // don't follow this in any apps since I don't want auto
     'ember/routes-segments-snake-case': 'off',
     // routes with index nested implicit index route
