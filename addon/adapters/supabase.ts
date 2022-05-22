@@ -1,4 +1,4 @@
-import JSONAPIAdapter from '@ember-data/adapter/json-api';
+import RESTAdapter from '@ember-data/adapter/rest';
 import { inject as service } from '@ember/service';
 import RSVP from 'rsvp';
 import { pluralize } from 'ember-inflector';
@@ -7,24 +7,26 @@ import type SupabaseService from 'ember-supabase/services/supabase';
 import type Store from '@ember-data/store';
 import type ModelRegistry from 'ember-data/types/registries/model';
 import type DS from 'ember-data';
-import type { SupabaseQueryBuilder } from '@supabase/supabase-js/dist/main/lib/SupabaseQueryBuilder';
-import type PostgrestFilterBuilder from '@supabase/postgrest-js/dist/main/lib/PostgrestFilterBuilder';
+import type { SupabaseQueryBuilder } from '@supabase/supabase-js/dist/module/lib/SupabaseQueryBuilder';
+import type PostgrestFilterBuilder from '@supabase/postgrest-js/dist/module/lib/PostgrestFilterBuilder';
 
-type ModelClass = any;
+type ModelClass<K extends keyof ModelRegistry> = ModelRegistry[K] & {
+  modelName: string;
+};
 
 interface Query {
   include?: string;
   filter?: (ref: PostgrestFilterBuilder<any>) => PostgrestFilterBuilder<any>;
 }
 
-export default class SupabaseAdapter extends JSONAPIAdapter {
+export default class SupabaseAdapter extends RESTAdapter {
   @service protected declare supabase: SupabaseService;
 
   public createRecord<K extends keyof ModelRegistry>(
     _store: Store,
-    type: ModelClass,
+    type: ModelClass<K>,
     snapshot: DS.Snapshot<K>
-  ): RSVP.Promise<any> {
+  ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const serialized = this.serialize(snapshot, { includeId: true });
@@ -43,9 +45,9 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
 
   public updateRecord<K extends keyof ModelRegistry>(
     _store: Store,
-    type: ModelClass,
+    type: ModelClass<K>,
     snapshot: DS.Snapshot<K>
-  ): RSVP.Promise<any> {
+  ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const serialized = this.serialize(snapshot, { includeId: true });
@@ -67,9 +69,9 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
 
   public deleteRecord<K extends keyof ModelRegistry>(
     _store: Store,
-    type: ModelClass,
+    type: ModelClass<K>,
     snapshot: DS.Snapshot<K>
-  ): RSVP.Promise<any> {
+  ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const ref = this.buildRef(type.modelName);
@@ -90,14 +92,21 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
 
   public findRecord<K extends keyof ModelRegistry>(
     _store: Store,
-    type: ModelClass,
+    type: ModelClass<K>,
     id: string,
-    _snapshot: DS.Snapshot<K>
-  ): RSVP.Promise<any> {
+    snapshot: DS.Snapshot<K> & Query
+  ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const ref = this.buildRef(type.modelName);
-        const { data, error } = await ref.select().match({ id }).single();
+        let columns;
+        if (snapshot.include) {
+          columns = this.serializeColumns(snapshot.include);
+        }
+        const { data, error } = await ref
+          .select(columns)
+          .match({ id })
+          .single();
         if (error) {
           reject(error);
         } else {
@@ -109,16 +118,40 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     });
   }
 
-  public findAll(
+  public findAll<K extends keyof ModelRegistry>(
     _store: Store,
-    type: ModelClass,
-    _sinceToken: string,
-    _snapshotRecordArray: any
-  ): RSVP.Promise<any> {
+    type: ModelClass<K>
+  ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
         const ref = this.buildRef(type.modelName);
         const { data, error } = await ref.select();
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public query<K extends keyof ModelRegistry>(
+    _store: Store,
+    type: ModelClass<K>,
+    query: Query
+  ): RSVP.Promise<unknown> {
+    return new RSVP.Promise(async (resolve, reject) => {
+      try {
+        const ref = this.buildRef(type.modelName);
+        let columns;
+        if (query.include) {
+          columns = this.serializeColumns(query.include);
+        }
+        const selectRef = ref.select(columns);
+        const queryRef = query.filter?.(selectRef) || selectRef;
+        const { data, error } = await queryRef;
         if (error) {
           reject(error);
         } else {
@@ -151,18 +184,21 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     });
   }
 
-  public findHasMany(
-    _store: Store,
-    snapshot: any,
+  public findHasMany<K extends keyof ModelRegistry>(
+    store: Store,
+    snapshot: DS.Snapshot<K>,
     _url: string,
     relationship: any
   ): RSVP.Promise<unknown> {
     return new RSVP.Promise(async (resolve, reject) => {
       try {
+        const inverse = (
+          snapshot.type as unknown as typeof DS.Model
+        ).inverseFor(relationship.key, store) as { name: string };
         const ref = this.buildRef(relationship.type);
         const { data, error } = await ref
           .select()
-          .eq(relationship.__inverseKey, snapshot.id);
+          .eq(inverse.name, snapshot.id);
         if (error) {
           reject(error);
         } else {
@@ -174,38 +210,26 @@ export default class SupabaseAdapter extends JSONAPIAdapter {
     });
   }
 
-  public query<K extends keyof ModelRegistry>(
-    _store: Store,
-    type: ModelRegistry[K],
-    query: Query
-  ): RSVP.Promise<any> {
-    return new RSVP.Promise(async (resolve, reject) => {
-      try {
-        const ref = this.buildRef((type as ModelClass).modelName);
-        let columns;
-        if (query.include) {
-          const relationships = query.include.split(',');
-          columns = [
-            '*',
-            ...relationships.map((relationship) => `${relationship} (*)`),
-          ].join(',');
-        }
-        const selectRef = ref.select(columns);
-        const queryRef = query.filter?.(selectRef) || selectRef;
-        const { data, error } = await queryRef;
-        if (error) {
-          reject(error);
-        } else {
-          resolve(data);
-        }
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
-
+  /**
+   * Returns Supabase database reference.
+   * @param modelName
+   * @returns
+   */
   protected buildRef(modelName: string): SupabaseQueryBuilder<any> {
     return this.supabase.client.from(pluralize(modelName));
+  }
+
+  /**
+   * Transforms `include` string for sideloading.
+   * @param include
+   * @returns
+   */
+  protected serializeColumns(include: string): string {
+    const relationships = include.split(',');
+    return [
+      '*',
+      ...relationships.map((relationship) => `${relationship} (*)`),
+    ].join(',');
   }
 }
 

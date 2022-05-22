@@ -13,37 +13,39 @@ module.exports = {
   plugins: ['@typescript-eslint', 'ember'],
   extends: [
     'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
     'plugin:ember/recommended',
+    'plugin:prettier/recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   env: {
     browser: true,
   },
   rules: {
-    '@typescript-eslint/explicit-module-boundary-types': 0,
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
     // don't follow this in any apps since I don't want auto
-    'ember/routes-segments-snake-case': 0,
+    'ember/routes-segments-snake-case': 'off',
     // routes with index nested implicit index route
-    '@typescript-eslint/no-empty-function': 0,
+    '@typescript-eslint/no-empty-function': 'off',
     // generated components with no args
-    '@typescript-eslint/no-empty-interface': 0,
+    '@typescript-eslint/no-empty-interface': 'off',
     // allow ts-ignore in tests
-    '@typescript-eslint/ban-ts-comment': 0,
+    '@typescript-eslint/ban-ts-comment': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    'ember/use-ember-data-rfc-395-imports': 'off',
   },
   overrides: [
     // node files
     {
       files: [
-        '.eslintrc.js',
-        '.prettierrc.js',
-        '.template-lintrc.js',
-        'ember-cli-build.js',
-        'testem.js',
-        'blueprints/*/index.js',
-        'config/**/*.js',
-        'lib/*/index.js',
-        'server/**/*.js',
-        'app/tailwind/tailwind.config.js',
+        './.eslintrc.js',
+        './.prettierrc.js',
+        './.template-lintrc.js',
+        './ember-cli-build.js',
+        './index.js',
+        './testem.js',
+        './blueprints/*/index.js',
+        './config/**/*.js',
+        './tests/dummy/config/**/*.js',
       ],
       parserOptions: {
         sourceType: 'script',
@@ -55,10 +57,13 @@ module.exports = {
       plugins: ['node'],
       extends: ['plugin:node/recommended'],
       rules: {
-        // this can be removed once the following is fixed
-        // https://github.com/mysticatea/eslint-plugin-node/issues/77
-        'node/no-unpublished-require': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
       },
+    },
+    {
+      // test files
+      files: ['tests/**/*-test.{js,ts}'],
+      extends: ['plugin:qunit/recommended'],
     },
   ],
 };

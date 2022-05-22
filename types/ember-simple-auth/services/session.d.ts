@@ -1,4 +1,4 @@
-import type { SupabaseAuthClient } from '@supabase/supabase-js/dist/main/lib/SupabaseAuthClient';
+import type { SupabaseAuthClient } from '@supabase/supabase-js/dist/module/lib/SupabaseAuthClient';
 import type Transition from '@ember/routing/-private/transition';
 
 declare module 'ember-simple-auth/services/session' {

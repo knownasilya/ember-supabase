@@ -3,7 +3,10 @@ declare module 'ember-simple-auth/authenticators/base' {
 
   export default class BaseAuthenticator extends EmberObject {
     authenticate(...args: any[]): Promise<unknown>;
-    invalidate(data?: object, ...args: any[]): Promise<unknown>;
-    restore(data: object): Promise<unknown>;
+    invalidate(
+      data?: Record<string, unknown>,
+      ...args: any[]
+    ): Promise<unknown>;
+    restore(data: Record<string, unknown>): Promise<unknown>;
   }
 }

@@ -2,6 +2,12 @@ Find Records
 ==============================================================================
 
 ```js
+return this.store.findRecord('user', 1,  {
+  include: 'posts',
+});
+```
+
+```js
 return this.store.query('post', {
   include: 'user,comments',
   filter: (ref) => {

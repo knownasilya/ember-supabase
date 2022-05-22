@@ -1,4 +1,10 @@
-import Model, { attr, belongsTo, hasMany, AsyncBelongsTo, AsyncHasMany } from '@ember-data/model';
+import Model, {
+  attr,
+  belongsTo,
+  hasMany,
+  AsyncBelongsTo,
+  AsyncHasMany,
+} from '@ember-data/model';
 
 import type UserModel from './user';
 import type CommentModel from './comment';

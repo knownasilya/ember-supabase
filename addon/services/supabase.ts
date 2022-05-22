@@ -5,10 +5,12 @@ import { getOwner } from '@ember/application';
 export default class SupabaseService extends Service {
   client: SupabaseClient;
 
-  constructor() {
-    super(...arguments);
+  constructor(...args: any[]) {
+    super(...args);
 
-    const config = getOwner(this).resolveRegistration('config:environment');
+    const config = (getOwner(this) as any).resolveRegistration(
+      'config:environment'
+    );
     const { url, key } = config.supabase;
 
     // Create a single supabase client for interacting with your database

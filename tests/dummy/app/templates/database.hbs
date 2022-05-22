@@ -1,31 +1,10 @@
-{{#if this.error}}
-  <p>Error: {{this.error}}</p>
-{{/if}}
+<p>
+  <LinkTo @route="database.index">Home</LinkTo>
+  <LinkTo @route="database.query">Query</LinkTo>
+  <LinkTo @route="database.find-all">Find All</LinkTo>
+  <LinkTo @route="database.find-record">Find Record</LinkTo>
+  <LinkTo @route="database.create-record">Create Record</LinkTo>
+  <LinkTo @route="database.update-record">Update Record</LinkTo>
+</p>
 
-<label>
-  Title
-  <Input @value={{this.title}} @type="text" />
-</label>
-<label>
-  Body
-  <Textarea @value={{this.body}} />
-</label>
-<button type="button" {{on "click" this.create}}>Create</button>
-
-<ul>
-  {{#each this.model as |post|}}
-    <li>
-      <b>{{post.title}}</b>
-      {{!-- template-lint-disable no-obsolete-elements --}}
-      <u>{{post.user.email}}</u>
-      <i>{{post.createdAt}}</i>
-      <ul>
-        {{#each post.comments as |comment|}}
-          <li>
-            {{comment.body}}
-          </li>
-        {{/each}}
-      </ul>
-    </li>
-  {{/each}}
-</ul>
+{{outlet}}

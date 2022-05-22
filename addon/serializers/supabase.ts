@@ -1,200 +1,51 @@
-import JSONAPISerializer from '@ember-data/serializer/json-api';
+import RESTSerializer from '@ember-data/serializer/rest';
 import { underscore } from '@ember/string';
 import { pluralize } from 'ember-inflector';
 
 import type Store from '@ember-data/store';
-
 import type Model from '@ember-data/model';
-import type DS from 'ember-data';
 
-interface UglyPayload {
-  id: string;
-  [key: string]: unknown;
-}
-
-interface UglyDocumentHash {
-  data: UglyPayload | UglyPayload[];
-  included: unknown[];
-}
-
-interface DocumentHash {
-  data: ResourceHash | ResourceHash[];
-  errors?: ErrorHash[];
-  meta?: MetaHash;
-  jsonapi?: Record<string, unknown>;
-  links?: LinksHash;
-  included?: ResourceHash[];
-}
-
-interface ResourceHash {
-  type: string;
-  id: string;
-  attributes?: Record<string, unknown>;
-  relationships?: Record<string, RelationshipHash>;
-  links?: LinksHash;
-}
-
-interface RelationshipHash {
-  links?: LinksHash;
-  data?: ResourceLink;
-  meta?: MetaHash;
-}
-
-interface LinkHash {
-  href: string;
-  meta: MetaHash;
-}
-type Link = string | LinkHash;
-type SelfLink = { self: Link };
-type RelatedLink = { related: Link };
-
-type LinksHash = SelfLink | RelatedLink;
-
-type ErrorHash = Record<string, unknown>;
-type MetaHash = Record<string, unknown>;
-
-interface ResourceIdentifier {
-  type: string;
-  id: string;
-  meta?: MetaHash;
-}
-
-type ResourceLink = null | ResourceIdentifier | ResourceIdentifier[];
-
-interface ModelClass {
+type ModelClass = Model & {
   modelName: string;
-  determineRelationshipType(
-    descriptor: { kind: string; type: string },
-    store: Store
-  ): string;
-  eachRelationship(
-    callback: (
-      name: string,
-      descriptor: {
-        kind: string;
-        type: string;
-      }
-    ) => void
-  ): void;
-}
+};
 
-export default class SupabaseSerializer extends JSONAPISerializer {
+export default class SupabaseSerializer extends RESTSerializer {
   public keyForAttribute(key: string): string {
     return underscore(key);
   }
 
   public extractRelationships(
-    modelClass: ModelClass,
-    resourceHash: ResourceHash
-  ): {} {
-    const relationships: Record<string, RelationshipHash> = {};
+    modelClass: Model,
+    resourceHash: Record<string, unknown>
+  ): Record<string, unknown> {
+    const links: Record<string, string> = {};
 
     modelClass.eachRelationship((name, { kind, type }) => {
       if (kind === 'belongsTo') {
-        const value = resourceHash.attributes?.[name] as
-          | UglyPayload
-          | string
-          | null;
-        if (value) {
-          const id = typeof value === 'object' ? value.id : value;
-          relationships[name] = {
-            data: {
-              type,
-              id,
-            },
-            links: {
-              related: `${type}/${value}`,
-            },
-          };
+        const id = resourceHash[name];
+        if (id) {
+          links[name] = `${type}/${id}`;
         }
-      } else {
-        const arr = resourceHash.attributes?.[name] as UglyPayload[];
-        relationships[name] = {
-          links: {
-            related: type,
-          },
-        };
-        if (arr) {
-          relationships[name].data = arr.map(({ id }) => ({
-            type,
-            id,
-          }));
-        }
+      } else if (kind === 'hasMany') {
+        links[name] = type;
       }
     });
 
-    resourceHash.relationships = relationships;
+    resourceHash.links = links;
 
     return super.extractRelationships(modelClass, resourceHash);
   }
 
-  public normalizeSingleResponse(
-    store: Store,
-    primaryModelClass: ModelClass & Model,
-    payload: UglyDocumentHash & { data: UglyPayload },
-    _id: string,
-    requestType: string
-  ): Record<string, unknown> {
-    const type = pluralize(primaryModelClass.modelName);
-    const { id, ...attributes } = payload.data;
-    const newPayload: DocumentHash = {
-      data: {
-        type,
-        id,
-        attributes,
-      },
-      included: this.gatherIncluded(primaryModelClass, payload.data),
-    };
-
-    return super.normalizeSingleResponse(
-      store,
-      primaryModelClass,
-      newPayload,
-      _id,
-      requestType
-    );
-  }
-
-  public normalizeArrayResponse(
-    store: Store,
-    primaryModelClass: ModelClass & Model,
-    payload: UglyDocumentHash & { data: UglyPayload[] },
-    _id: string,
-    requestType: string
-  ): Record<string, unknown> {
-    const type = pluralize(primaryModelClass.modelName);
-    const newPayload: DocumentHash = {
-      data: [],
-      included: payload.data
-        .map((thing) => this.gatherIncluded(primaryModelClass, thing))
-        .flat(),
-    };
-    newPayload.data = payload.data.map(
-      ({ id, ...attributes }): ResourceHash => ({
-        type,
-        id,
-        attributes,
-      })
-    );
-
-    return super.normalizeArrayResponse(
-      store,
-      primaryModelClass,
-      newPayload,
-      _id,
-      requestType
-    );
-  }
-
   public normalizeResponse(
     store: Store,
-    primaryModelClass: ModelClass & Model,
-    payload: UglyPayload | UglyPayload[],
+    primaryModelClass: ModelClass,
+    payload: Record<string, unknown>,
     id: string | number,
     requestType: string
-  ): DocumentHash {
+  ): Record<string, unknown> {
+    const type = pluralize(primaryModelClass.modelName);
     const newPayload = {
-      data: payload,
+      [type]: payload,
     };
 
     return super.normalizeResponse(
@@ -203,71 +54,74 @@ export default class SupabaseSerializer extends JSONAPISerializer {
       newPayload,
       id,
       requestType
-    ) as DocumentHash;
+    );
   }
 
-  private gatherIncluded(
-    primaryModelClass: ModelClass & Model,
-    record: UglyPayload
-  ): ResourceHash[] {
-    let included: ResourceHash[] = [];
+  public normalizeSingleResponse(
+    store: Store,
+    primaryModelClass: ModelClass,
+    payload: Record<string, Record<string, unknown>>,
+    id: string,
+    requestType: string
+  ): Record<string, unknown> {
+    const record = payload[pluralize(primaryModelClass.modelName)];
+    this.appendIncludedRecordsToPayload(primaryModelClass, payload, record);
 
+    return super.normalizeSingleResponse(
+      store,
+      primaryModelClass,
+      payload,
+      id,
+      requestType
+    );
+  }
+
+  public normalizeArrayResponse(
+    store: Store,
+    primaryModelClass: ModelClass,
+    payload: Record<string, []>,
+    id: string,
+    requestType: string
+  ): Record<string, unknown> {
+    const records = payload[pluralize(primaryModelClass.modelName)];
+    records.forEach((record) => {
+      this.appendIncludedRecordsToPayload(primaryModelClass, payload, record);
+    });
+
+    return super.normalizeArrayResponse(
+      store,
+      primaryModelClass,
+      payload,
+      id,
+      requestType
+    );
+  }
+
+  private appendIncludedRecordsToPayload(
+    primaryModelClass: ModelClass,
+    payload: Record<string, Record<string, any> | Record<string, unknown>[]>,
+    record: Record<string, unknown>
+  ): void {
     primaryModelClass.eachRelationship((name, { kind, type }) => {
-      if (kind === 'belongsTo') {
-        const value = record[name] as UglyPayload | string | null;
-        if (value && typeof value === 'object') {
-          const { id, ...attributes } = value;
-          included.push({
-            type,
-            id,
-            attributes,
-          });
+      const includedType = pluralize(type);
+      const value = record[name] as
+        | string
+        | { id: string }
+        | { id: string }[]
+        | null;
+      if (value && typeof value === 'object') {
+        if (!Array.isArray(payload[includedType])) {
+          payload[includedType] = [];
         }
-      } else {
-        const arr = record[name] as UglyPayload[];
-        if (arr) {
-          included = included.concat(
-            arr.map(
-              ({ id, ...attributes }): ResourceHash => ({
-                type,
-                id,
-                attributes,
-              })
-            )
-          );
+        if (kind === 'belongsTo' && !Array.isArray(value)) {
+          payload[includedType].push(value);
+          record[name] = value.id;
+        } else if (kind === 'hasMany' && Array.isArray(value)) {
+          payload[includedType].push(...value);
+          record[name] = value.map((record) => record.id);
         }
       }
     });
-
-    return included;
-  }
-
-  serialize(snapshot: DS.Snapshot, options: any) {
-    const json: Record<string, unknown> = {};
-
-    if (options && options.includeId) {
-      const id = snapshot.id;
-      if (id) {
-        json[this.primaryKey] = id;
-      }
-    }
-
-    snapshot.eachAttribute((key, _attribute) => {
-      json[underscore(key)] = snapshot.record[key];
-    });
-
-    snapshot.eachRelationship((_key, relationship) => {
-      if (relationship.kind === 'belongsTo') {
-        const id = snapshot.belongsTo(relationship.key, { id: true });
-        if (id) {
-          json[underscore(relationship.key)] = id;
-        } else {
-          json[relationship.key] = null;
-        }
-      }
-    });
-
-    return json;
   }
 }
 

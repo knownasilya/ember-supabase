@@ -10,39 +10,54 @@ export default class AuthenticationController extends Controller {
 
   @tracked email?: string;
   @tracked password?: string;
+
+  @tracked success?: true;
   @tracked error?: string;
 
-  @action async register(): Promise<void> {
+  @action async register() {
+    (this.success = undefined), (this.error = undefined);
+
     const { email, password } = this;
     try {
       await this.session.authenticate('authenticator:supabase', (auth) => {
         return auth.signUp({ email, password });
       });
+      this.success = true;
     } catch (error) {
       this.error = error.message;
     }
   }
 
-  @action async login(): Promise<void> {
+  @action async login() {
+    (this.success = undefined), (this.error = undefined);
+
     const { email, password } = this;
     try {
       await this.session.authenticate('authenticator:supabase', (auth) => {
         return auth.signIn({ email, password });
       });
+      this.success = true;
     } catch (error) {
       this.error = error.message;
     }
   }
 
-  @action loginGitHub(): void {
-    this.session.authenticate('authenticator:supabase', (auth) => {
-      return auth.signIn({
-        provider: 'github',
+  @action async loginGitHub() {
+    (this.success = undefined), (this.error = undefined);
+
+    try {
+      await this.session.authenticate('authenticator:supabase', (auth) => {
+        return auth.signIn({
+          provider: 'github',
+        });
       });
-    });
+      this.success = true;
+    } catch (error) {
+      this.error = error.message;
+    }
   }
 
-  @action logout(): Promise<void> {
+  @action logout() {
     return this.session.invalidate();
   }
 }

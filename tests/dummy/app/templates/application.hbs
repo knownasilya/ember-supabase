@@ -9,7 +9,14 @@
   <LinkTo @route="storage">Storage</LinkTo>
 </p>
 
-<p>Authenticated: {{this.session.isAuthenticated}}</p>
+<p>
+  Authenticated:
+  {{if
+    this.session.isAuthenticated
+    this.session.data.authenticated.user.email
+    "No"
+  }}
+</p>
 
 <hr />
 
