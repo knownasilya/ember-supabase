@@ -1,0 +1,20 @@
+{{#if this.success}}
+  <p>Success!</p>
+{{/if}}
+{{#if this.error}}
+  <p>Error: {{this.error}}</p>
+{{/if}}
+
+<label>
+  Email
+  <Input @value={{this.email}} @type="email" />
+</label>
+<label>
+  Password
+  <Input @value={{this.password}} @type="password" />
+</label>
+<button type="button" {{on "click" this.register}}>Register</button>
+<button type="button" {{on "click" this.login}}>Login</button>
+<button type="button" {{on "click" this.logout}}>Logout</button>
+
+<p><button type="button" {{on "click" this.login}}>Login with GitHub</button></p>

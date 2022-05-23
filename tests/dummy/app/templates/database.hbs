@@ -1,15 +1,10 @@
-<ul>
-  {{#each this.model as |post|}}
-    <li>
-      <b>{{post.title}}</b>
-      <i>{{post.createdAt}}</i>
-      <ul>
-        {{#each post.comments as |comment|}}
-          <li>
-            {{comment.body}}
-          </li>
-        {{/each}}
-      </ul>
-    </li>
-  {{/each}}
-</ul>
+<p>
+  <LinkTo @route="database.index">Home</LinkTo>
+  <LinkTo @route="database.query">Query</LinkTo>
+  <LinkTo @route="database.find-all">Find All</LinkTo>
+  <LinkTo @route="database.find-record">Find Record</LinkTo>
+  <LinkTo @route="database.create-record">Create Record</LinkTo>
+  <LinkTo @route="database.update-record">Update Record</LinkTo>
+</p>
+
+{{outlet}}

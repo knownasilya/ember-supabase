@@ -1,61 +1,132 @@
-import JSONSerializer from '@ember-data/serializer/json';
+import RESTSerializer from '@ember-data/serializer/rest';
 import { underscore } from '@ember/string';
 import { pluralize } from 'ember-inflector';
 
 import type Store from '@ember-data/store';
+import type Model from '@ember-data/model';
+import type ModelRegistry from 'ember-data/types/registries/model';
 
-interface Links {
-  [key: string]: string;
-}
+type ModelClass = Model & {
+  modelName: keyof ModelRegistry;
+};
 
-interface ResourceHash {
-  id: string;
-  links: Links;
-  [key: string]: string | Links;
-}
+type RelationshipValue = string | { id: string } | { id: string }[] | null;
 
-interface ModelClass {
-  modelName: string;
-  determineRelationshipType(
-    descriptor: { kind: string; type: string },
-    store: Store
-  ): string;
-  eachRelationship(
-    callback: (
-      name: string,
-      descriptor: {
-        kind: string;
-        type: string;
-      }
-    ) => void
-  ): void;
-}
-
-export default class SupabaseSerializer extends JSONSerializer {
-  keyForAttribute(key: string): string {
+export default class SupabaseSerializer extends RESTSerializer {
+  public keyForAttribute(key: string): string {
     return underscore(key);
   }
 
-  extractRelationships(
-    modelClass: ModelClass,
-    resourceHash: ResourceHash
-  ): {} {
-    const newResourceHash = { ...resourceHash };
-    const links: { [key: string]: string } = {};
+  public extractRelationships(
+    modelClass: Model,
+    resourceHash: Record<string, unknown>
+  ): Record<string, unknown> {
+    const links: Record<string, string> = {};
 
-    modelClass.eachRelationship((name, descriptor) => {
-      if (descriptor.kind === 'belongsTo') {
+    modelClass.eachRelationship((name, { kind, type }) => {
+      if (kind === 'belongsTo') {
         const id = resourceHash[name];
-        const path = `${name}/${id}`;
-        links[name] = path;
-      } else {
-        links[name] = pluralize(descriptor.type);
+        if (id) {
+          links[name] = `${type}/${id}`;
+        }
+      } else if (kind === 'hasMany') {
+        links[name] = type;
       }
     });
 
-    newResourceHash.links = links;
+    resourceHash.links = links;
 
-    return super.extractRelationships(modelClass, newResourceHash);
+    return super.extractRelationships(modelClass, resourceHash);
+  }
+
+  public normalizeResponse(
+    store: Store,
+    primaryModelClass: ModelClass,
+    payload: Record<string, unknown>,
+    id: string | number,
+    requestType: string
+  ): Record<string, unknown> {
+    const type = pluralize(primaryModelClass.modelName);
+    const newPayload = {
+      [type]: payload,
+    };
+
+    return super.normalizeResponse(
+      store,
+      primaryModelClass,
+      newPayload,
+      id,
+      requestType
+    );
+  }
+
+  public normalizeSingleResponse(
+    store: Store,
+    primaryModelClass: ModelClass,
+    payload: Record<string, Record<string, unknown>>,
+    id: string,
+    requestType: string
+  ): Record<string, unknown> {
+    const record = payload[pluralize(primaryModelClass.modelName)];
+    this.appendIncludedRecordsToPayload(primaryModelClass, payload, record);
+
+    return super.normalizeSingleResponse(
+      store,
+      primaryModelClass,
+      payload,
+      id,
+      requestType
+    );
+  }
+
+  public normalizeArrayResponse(
+    store: Store,
+    primaryModelClass: ModelClass,
+    payload: Record<string, []>,
+    id: string,
+    requestType: string
+  ): Record<string, unknown> {
+    const records = payload[pluralize(primaryModelClass.modelName)];
+    records.forEach((record) => {
+      this.appendIncludedRecordsToPayload(primaryModelClass, payload, record);
+    });
+
+    return super.normalizeArrayResponse(
+      store,
+      primaryModelClass,
+      payload,
+      id,
+      requestType
+    );
+  }
+
+  /**
+   * Brings nested records up to top level for sideloading.
+   * @param primaryModelClass
+   * @param payload
+   * @param record
+   */
+  private appendIncludedRecordsToPayload(
+    primaryModelClass: ModelClass,
+    payload: Record<string, Record<string, any> | Record<string, unknown>[]>,
+    record: Record<string, unknown>
+  ): void {
+    primaryModelClass.eachRelationship((name, { kind, type }) => {
+      const value = record[name] as RelationshipValue;
+      if (value && typeof value === 'object') {
+        const includedType = pluralize(type);
+        if (!Array.isArray(payload[includedType])) {
+          payload[includedType] = [];
+        }
+        if (kind === 'belongsTo' && !Array.isArray(value)) {
+          payload[includedType].push(value);
+          record[name] = value.id;
+        } else if (kind === 'hasMany' && Array.isArray(value)) {
+          payload[includedType].push(...value);
+          record[name] = value.map((record) => record.id);
+        }
+      }
+    });
   }
 }
 

@@ -1,0 +1,13 @@
+<ul>
+  <li>User: {{this.model.post.user.email}}</li>
+  <li>Created: {{this.model.post.createdAt}}</li>
+  <li>Title: {{this.model.post.title}}</li>
+  <li>Body: {{this.model.post.body}}</li>
+  <li>Comments:
+    <ul>
+      {{#each this.model.post.comments as |comment|}}
+        <li>{{comment.body}}</li>
+      {{/each}}
+    </ul>
+  </li>
+</ul>
