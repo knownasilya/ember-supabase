@@ -7,6 +7,6 @@ export default class DatabaseUpdateRecordRoute extends Route {
   @service declare store: Store;
 
   model() {
-    return this.store.findRecord('post', 58);
+    return this.store.findRecord('post', 1);
   }
 }

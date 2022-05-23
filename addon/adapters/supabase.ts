@@ -24,7 +24,6 @@ interface Query<K extends keyof ModelRegistry> {
 
 export default class SupabaseAdapter extends RESTAdapter {
   @service protected declare supabase: SupabaseService;
-  @service protected declare store: Store;
 
   public createRecord<K extends keyof ModelRegistry>(
     _store: Store,
@@ -105,7 +104,7 @@ export default class SupabaseAdapter extends RESTAdapter {
         const ref = this.buildRef(type.modelName);
         let columns;
         if (snapshot.include) {
-          columns = this.serializeColumns(snapshot.include);
+          columns = this.serializeIncludeAsColumns(snapshot.include);
         }
         const { data, error } = await ref
           .select(columns)
@@ -142,7 +141,7 @@ export default class SupabaseAdapter extends RESTAdapter {
   }
 
   public query<K extends keyof ModelRegistry>(
-    _store: Store,
+    store: Store,
     type: ModelClass<K>,
     query: Query<K>
   ): RSVP.Promise<unknown> {
@@ -151,11 +150,11 @@ export default class SupabaseAdapter extends RESTAdapter {
         const ref = this.buildRef(type.modelName);
         let columns;
         if (query.include) {
-          columns = this.serializeColumns(query.include);
+          columns = this.serializeIncludeAsColumns(query.include);
         }
 
         if (query.realtime) {
-          this.addRealtimeSubscription(ref, type);
+          this.addRealtimeSubscription(store, ref, type);
         }
 
         const selectRef = ref.select(columns);
@@ -237,36 +236,47 @@ export default class SupabaseAdapter extends RESTAdapter {
    * @param include
    * @returns
    */
-  protected serializeColumns(include: string): string {
-    const relationships = include.split(',');
+  protected serializeIncludeAsColumns(include: string): string {
+    const paths = include.split(',');
+    return this.serializeColumns(paths);
+  }
+
+  /**
+   * Recursively builds PostgREST columns select string.
+   * @param paths
+   * @returns
+   */
+  private serializeColumns(paths: string[]): string {
     return [
       '*',
-      ...relationships.map((relationship) => `${relationship} (*)`),
+      ...paths.map((include) => {
+        const [first, ...remaining] = include.split('.');
+        return `${first}(${this.serializeColumns(remaining)})`;
+      }),
     ].join(',');
   }
 
   /**
    * Subscribes to realtime table.
+   * @param store
    * @param ref
    * @param type
    */
   private addRealtimeSubscription<K extends keyof ModelRegistry>(
+    store: Store,
     ref: SupabaseQueryBuilder<ModelRegistry[K]>,
     type: ModelClass<K>
   ): void {
     ref
       .on('*', (payload) => {
         if (payload.eventType === 'DELETE') {
-          const record = this.store.peekRecord(type.modelName, payload.old.id);
+          const record = store.peekRecord(type.modelName, payload.old.id);
           if (record) {
-            this.store.unloadRecord(record);
+            store.unloadRecord(record);
           }
         } else {
-          const normalizedRecord = this.store.normalize(
-            type.modelName,
-            payload.new
-          );
-          this.store.push(normalizedRecord);
+          const normalizedRecord = store.normalize(type.modelName, payload.new);
+          store.push(normalizedRecord);
         }
       })
       .subscribe();

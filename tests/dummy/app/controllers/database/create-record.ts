@@ -4,9 +4,11 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 
 import type Store from '@ember-data/store';
+import type Session from 'ember-simple-auth/services/session';
 
 export default class DatabaseCreateRecordController extends Controller {
   @service declare store: Store;
+  @service declare session: Session;
 
   @tracked title?: string;
   @tracked body?: string;
@@ -17,7 +19,14 @@ export default class DatabaseCreateRecordController extends Controller {
   @action async create() {
     (this.success = undefined), (this.error = undefined);
 
-    const user = this.store.peekRecord('user', '1');
+    let user;
+    if (this.session.isAuthenticated) {
+      user = await this.store.findRecord(
+        'user',
+        (this.session.data as any).authenticated.user.id
+      );
+    }
+
     const { title, body } = this;
     const post = this.store.createRecord('post', { user, title, body });
 

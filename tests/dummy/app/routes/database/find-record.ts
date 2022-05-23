@@ -9,10 +9,14 @@ export default class DatabaseFindRecordRoute extends Route {
 
   model() {
     return hash({
-      user: this.store.findRecord('user', 1, {
-        include: 'comments',
-      }),
-      post: this.store.findRecord('post', 58, {
+      user: this.store.findRecord(
+        'user',
+        'e5383a22-d410-4614-89a1-20ea900fa6c1',
+        {
+          include: 'comments',
+        }
+      ),
+      post: this.store.findRecord('post', 1, {
         include: 'user,comments',
       }),
       comment: this.store.findRecord('comment', 1, {
