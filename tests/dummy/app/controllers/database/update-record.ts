@@ -11,7 +11,9 @@ export default class DatabaseUpdateRecordController extends Controller {
   @tracked error?: string;
 
   @action async update() {
-    (this.success = undefined), (this.error = undefined);
+    this.success = undefined;
+    this.error = undefined;
+
     try {
       await this.model.save();
       this.success = true;

@@ -17,7 +17,8 @@ export default class AuthenticationController extends Controller {
   @tracked error?: string;
 
   @action async register() {
-    (this.success = undefined), (this.error = undefined);
+    this.success = undefined;
+    this.error = undefined;
 
     const { email, password } = this;
     try {
@@ -46,7 +47,8 @@ export default class AuthenticationController extends Controller {
   }
 
   @action async login() {
-    (this.success = undefined), (this.error = undefined);
+    this.success = undefined;
+    this.error = undefined;
 
     const { email, password } = this;
     try {
@@ -60,7 +62,8 @@ export default class AuthenticationController extends Controller {
   }
 
   @action async loginGitHub() {
-    (this.success = undefined), (this.error = undefined);
+    this.success = undefined;
+    this.error = undefined;
 
     try {
       await this.session.authenticate('authenticator:supabase', (auth) => {

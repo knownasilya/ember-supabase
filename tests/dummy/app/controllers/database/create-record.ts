@@ -17,7 +17,8 @@ export default class DatabaseCreateRecordController extends Controller {
   @tracked error?: string;
 
   @action async create() {
-    (this.success = undefined), (this.error = undefined);
+    this.success = undefined;
+    this.error = undefined;
 
     let user;
     if (this.session.isAuthenticated) {
@@ -32,7 +33,9 @@ export default class DatabaseCreateRecordController extends Controller {
 
     try {
       await post.save();
-      (this.success = true), (this.title = undefined), (this.body = undefined);
+      this.success = true;
+      this.title = undefined;
+      this.body = undefined;
     } catch (error) {
       this.error = error.message;
     }

@@ -10,6 +10,8 @@ type ModelClass = Model & {
   modelName: keyof ModelRegistry;
 };
 
+type RelationshipValue = string | { id: string } | { id: string }[] | null;
+
 export default class SupabaseSerializer extends RESTSerializer {
   public keyForAttribute(key: string): string {
     return underscore(key);
@@ -110,11 +112,7 @@ export default class SupabaseSerializer extends RESTSerializer {
     record: Record<string, unknown>
   ): void {
     primaryModelClass.eachRelationship((name, { kind, type }) => {
-      const value = record[name] as
-        | string
-        | { id: string }
-        | { id: string }[]
-        | null;
+      const value = record[name] as RelationshipValue;
       if (value && typeof value === 'object') {
         const includedType = pluralize(type);
         if (!Array.isArray(payload[includedType])) {
