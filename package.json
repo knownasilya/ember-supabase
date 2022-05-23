@@ -5,7 +5,10 @@
   "keywords": [
     "ember-addon"
   ],
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/knownasilya/ember-supabase.git"
+  },
   "license": "MIT",
   "author": "",
   "directories": {
@@ -25,7 +28,8 @@
     "test:ember": "ember test",
     "test:ember-compatibility": "ember try:each",
     "prepack": "ember ts:precompile",
-    "postpack": "ember ts:clean"
+    "postpack": "ember ts:clean",
+    "release": "yarn release-it"
   },
   "dependencies": {
     "@supabase/supabase-js": "^1.35.3",
@@ -99,16 +103,36 @@
     "prettier": "^2.6.1",
     "qunit": "^2.18.0",
     "qunit-dom": "^2.0.0",
+    "release-it": "^14.2.1",
+    "release-it-lerna-changelog": "^3.1.0",
     "typescript": "^4.6.4",
     "webpack": "^5.70.0"
   },
   "engines": {
     "node": "12.* || 14.* || >= 16"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "ember": {
     "edition": "octane"
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"
+  },
+  "release-it": {
+    "plugins": {
+      "release-it-lerna-changelog": {
+        "infile": "CHANGELOG.md",
+        "launchEditor": false
+      }
+    },
+    "git": {
+      "tagName": "v${version}"
+    },
+    "github": {
+      "release": true,
+      "tokenRef": "GITHUB_AUTH"
+    }
   }
 }
