@@ -2,6 +2,7 @@ import RESTAdapter from '@ember-data/adapter/rest';
 import { inject as service } from '@ember/service';
 import RSVP from 'rsvp';
 import { pluralize } from 'ember-inflector';
+import { underscore } from '@ember/string';
 
 import type SupabaseService from 'ember-supabase/services/supabase';
 import type Store from '@ember-data/store';
@@ -228,7 +229,8 @@ export default class SupabaseAdapter extends RESTAdapter {
   protected buildRef<K extends keyof ModelRegistry>(
     modelName: K
   ): SupabaseQueryBuilder<ModelRegistry[K]> {
-    return this.supabase.client.from(pluralize(modelName));
+    const table = pluralize(underscore(modelName));
+    return this.supabase.client.from(table);
   }
 
   /**
