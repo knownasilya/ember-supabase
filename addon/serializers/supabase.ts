@@ -112,7 +112,7 @@ export default class SupabaseSerializer extends RESTSerializer {
     record: Record<string, unknown>
   ): void {
     primaryModelClass.eachRelationship((name, { kind, type }) => {
-      const value = record[name] as RelationshipValue;
+      const value = record[this.keyForAttribute(name)] as RelationshipValue;
       if (value && typeof value === 'object') {
         const includedType = pluralize(type);
         if (!Array.isArray(payload[includedType])) {
