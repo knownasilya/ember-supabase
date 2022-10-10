@@ -1,17 +1,23 @@
 Finding Records
 ==============================================================================
 
+## Finding One Item By Id
+
 ```js
 return this.store.findRecord('user', 1, {
   include: 'posts',
 });
 ```
 
+## Finding All Items
+
 ```js
 return this.store.findAll('post', {
   include: 'user',
 });
 ```
+
+## Filtering
 
 ```js
 return this.store.query('post', {
@@ -25,3 +31,5 @@ return this.store.query('post', {
   },
 });
 ```
+
+See https://supabase.com/docs/reference/javascript/using-filters for example filters that can be used.
